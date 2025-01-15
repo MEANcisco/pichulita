@@ -2350,8 +2350,7 @@ void Monster::dropLoot(const std::shared_ptr<Container> &corpse, const std::shar
 	if (corpse && lootDrop) {
 		// Only fiendish drops sliver
 		if (ForgeClassifications_t classification = getMonsterForgeClassification();
-		    // Condition
-		    classification == ForgeClassifications_t::FORGE_FIENDISH_MONSTER) {
+			classification == ForgeClassifications_t::FORGE_FIENDISH_MONSTER) {
 			auto minSlivers = g_configManager().getNumber(FORGE_MIN_SLIVERS);
 			auto maxSlivers = g_configManager().getNumber(FORGE_MAX_SLIVERS);
 
@@ -2361,7 +2360,20 @@ void Monster::dropLoot(const std::shared_ptr<Container> &corpse, const std::shar
 			if (g_game().internalAddItem(corpse, sliver) != RETURNVALUE_NOERROR) {
 				corpse->internalAddThing(sliver);
 			}
+			}
+
+		// Generate 2 to 10 random powders of any type
+		const int powderCount = uniform_random(2, 10);
+		const std::array<uint16_t, 4> powders = {ITEM_YELLOW_POWDER, ITEM_PURPLE_POWDER, ITEM_GREEN_POWDER, ITEM_RED_POWDER};
+
+		for (int i = 0; i < powderCount; ++i) {
+			const auto randomPowder = powders[uniform_random(0, powders.size() - 1)];
+			const auto &powder = Item::CreateItem(randomPowder, 1);
+			if (g_game().internalAddItem(corpse, powder) != RETURNVALUE_NOERROR) {
+				corpse->internalAddThing(powder);
+			}
 		}
+
 		if (!this->isRewardBoss() && g_configManager().getNumber(RATE_LOOT) > 0) {
 			g_callbacks().executeCallback(EventCallback_t::monsterOnDropLoot, &EventCallback::monsterOnDropLoot, getMonster(), corpse);
 			g_callbacks().executeCallback(EventCallback_t::monsterPostDropLoot, &EventCallback::monsterPostDropLoot, getMonster(), corpse);
